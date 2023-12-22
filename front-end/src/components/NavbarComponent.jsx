@@ -20,26 +20,11 @@ export default function NavbarComponent() {
           as="a"
           href="#"
           variant="h6"
-          className="mr-4 ml-2 cursor-pointer py-1.5"
+          className="mr-4 ml-2 cursor-pointer py-1.5 text-xl"
         >
-          Material Tailwind
+          MARKET
         </Typography>
-        <div className="ml-auto flex gap-1 md:mr-4">
-          <IconButton variant="text" color="white">
-            <Cog6ToothIcon className="h-4 w-4" />
-          </IconButton>
-          <IconButton variant="text" color="white">
-            <BellIcon className="h-4 w-4" />
-          </IconButton>
-        </div>
-        <div className="mx-auto">
-          <Link to={"/login"}>
-            {" "}
-            <Button className="bg-white text-black mx-5">Login</Button>
-          </Link>
-          <Button className="bg-white text-black mx-auto">Signup</Button>
-        </div>
-        <div className="relative flex w-full gap-2 md:w-max">
+        <div className="relative flex w-full gap-2 md:w-max mx-5">
           <Input
             type="search"
             color="white"
@@ -56,6 +41,22 @@ export default function NavbarComponent() {
           >
             Search
           </Button>
+        </div>
+
+        <div className="mx-auto">
+          <Link to={"/login"}>
+            {" "}
+            <Button className="bg-white text-black mx-5">Login</Button>
+          </Link>
+          <Button className="bg-white text-black mx-auto">Signup</Button>
+        </div>
+        <div className="ml-auto flex gap-1 md:mr-4">
+          <IconButton variant="text" color="white">
+            <Cog6ToothIcon className="h-4 w-4" />
+          </IconButton>
+          <IconButton variant="text" color="white">
+            <BellIcon className="h-4 w-4" />
+          </IconButton>
         </div>
       </div>
     </Navbar>
