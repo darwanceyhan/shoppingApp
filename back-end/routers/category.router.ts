@@ -1,11 +1,62 @@
 import { Request, Response, NextFunction } from "express";
-const express = require("express");
+import express from "express";
+import { pool } from "../index";
+import { Ierror } from "../interfaces/Ierror";
 
 const router = express.Router();
 
+router.get(
+    "/:categoryId",
+    (req: Request, res: Response, next: NextFunction) => {
+        pool.query("select * from categories", (err, result) => {
+            if (err) {
+                const errObject: Ierror = {
+                    message: "Internal Server Error",
+                    statusCode: 500,
+                };
+                return next(errObject);
+            }
 
-router.get("/:category", (req: Request, res: Response, next: NextFunction) => {
-    res.send(req.params.category)
-})
+            const categoryIds = result.rows.map((e) => String(e.categoryid));
+
+            if (req.params.categoryId == "all") {
+                pool.query("SELECT * FROM products", (err, result) => {
+                    if (err) {
+                        const errObject: Ierror = {
+                            message: "Internal Server Error",
+                            statusCode: 500,
+                        };
+                        return next(errObject);
+                    }
+                    else {
+                        res.send(result.rows)
+                    }
+                })
+            } else if (categoryIds.includes(req.params.categoryId)) {
+                pool.query(
+                    "SELECT productname , price , stockquantity , categoryname FROM products INNER JOIN categories ON products.categoryid = categories.categoryid WHERE products.categoryid = $1",
+                    [req.params.categoryId],
+                    (err, result) => {
+                        if (err) {
+                            const errObject: Ierror = {
+                                message: "Internal Server Error",
+                                statusCode: 500,
+                            };
+                            return next(errObject);
+                        } else {
+                            res.send(result.rows);
+                        }
+                    }
+                );
+            } else {
+                const errObject: Ierror = {
+                    message: "Enter correctly categoryId",
+                    statusCode: 500,
+                };
+                next(errObject);
+            }
+        });
+    }
+);
 
 module.exports = router;
