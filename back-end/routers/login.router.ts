@@ -14,8 +14,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
         const user: Iuser = req.body;
         const hashGenerator = new HashGenerator(user.password);
 
-        // Hash işlemi tamamlandığında devam etmek için then bloğu
-        await hashGenerator.hashPassword(req, res, next).then(() => {
+        hashGenerator.hashPassword(req, res, next).then(() => {
             pool.query(
                 'SELECT password FROM customers WHERE email=$1',
                 [user.email],
