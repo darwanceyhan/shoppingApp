@@ -3,18 +3,24 @@ import { Iuser } from "../interfaces/Iuser";
 const jwt = require("jsonwebtoken");
 
 export const generateToken = (user: Iuser) => {
-    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1m" });
+
+    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1m",
+    });
     return token;
-}
+};
 
-export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-
+export const verifyToken = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     let token: string;
 
-    const authorizationHeader = req.headers['authorization'];
+    const authorizationHeader = req.headers["authorization"];
 
-    if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
-        token = authorizationHeader.split(' ')[1];
+    if (authorizationHeader && authorizationHeader.startsWith("Bearer ")) {
+        token = authorizationHeader.split(" ")[1];
     } else {
         return next({
             message: "Access denied. No token provided.",

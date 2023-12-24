@@ -5,6 +5,8 @@ const cookieParser = require("cookie-parser")
 const express = require("express")
 const loginRouter = require("./routers/login.router");
 const errorHandling = require("./middlewares/errHandling.middleware");
+const categoryRouter = require("./routers/category.router")
+const signupRouter = require("./routers/signup.router")
 const dotenv = require("dotenv");
 
 dotenv.config()
@@ -12,12 +14,14 @@ const server = express();
 server.use(cookieParser())
 server.use(express.json())
 server.use("/login", loginRouter);
+server.use("/category", categoryRouter);
+server.use("/signup", signupRouter);
 
 
 export const pool = new Pool({
     user: "postgres",
     host: "localhost", // Update to the correct host
-    database: "users",
+    database: "shop_database",
     password: "280015",
     port: 5432,
     connectionTimeoutMillis: 5000, // Example: Set a higher timeout value (5 seconds)

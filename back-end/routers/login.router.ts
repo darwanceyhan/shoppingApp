@@ -1,50 +1,42 @@
 import { NextFunction, Request, Response } from "express";
 import { Iuser } from "../interfaces/Iuser";
 import { Ierror } from "../interfaces/Ierror";
-import { pool } from "../index"
+import { pool } from "../index";
 import { generateToken } from "../middlewares/auth.middleware";
+import * as bcrypt from "bcrypt";
 const express = require("express");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get("/", (req: Request, res: Response) => {
-    res.send("hello from login")
-})
-
-router.post("/", (req: Request, res: Response, next: NextFunction) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     try {
-
-        const user: Iuser = {
-            username: req.body.username,
-            password: req.body.password
-        }
+        const user: Iuser = req.body
+        user.password = await bcrypt.hash(user.password, 10);
+        console.log(user.password);
         pool.query(
-            "SELECT * FROM user_table WHERE username=$1 AND password=$2",
-            [user.username, user.password],
+            "SELECT * FROM customers WHERE email=$1 AND password=$2",
+            [user.email, user.password],
             (err, result) => {
-                if (err) {
-
+                if (result.rowCount == 0) {
                     const errObject: Ierror = {
                         statusCode: 500,
-                        message: "could'nt connect postgres or query problem",
+                        message: "Email or password unauthorizatized",
                     };
-
                     next(errObject);
                 } else {
                     const token = generateToken(user);
                     res.cookie("user", token, { maxAge: 90000, httpOnly: true });
-                    res.status(200).json(result.rows);
+                    res.status(200).json({ login: true });
                 }
             }
         );
-    }
-    catch (error) {
+    } catch (error) {
         const errObject: Ierror = {
             message: "Internal server error",
-            statusCode: 500
-        }
-        next(errObject)
+            statusCode: 500,
+        };
+        next(errObject);
     }
-})
+});
 
 module.exports = router;

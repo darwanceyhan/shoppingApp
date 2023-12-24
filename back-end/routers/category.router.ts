@@ -7,3 +7,5 @@ const router = express.Router();
 router.get("/:category", (req: Request, res: Response, next: NextFunction) => {
     res.send(req.params.category)
 })
+
+module.exports = router;
