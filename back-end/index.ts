@@ -12,7 +12,6 @@ const bodyParser = require("body-parser")
 
 const server = express();
 dotenv.config();
-server.use(bodyParser())
 server.use(cookieParser())
 server.use(express.json())
 server.use("/login", loginRouter);
