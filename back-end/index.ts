@@ -8,9 +8,11 @@ const errorHandling = require("./middlewares/errHandling.middleware");
 const categoryRouter = require("./routers/category.router")
 const signupRouter = require("./routers/signup.router")
 const dotenv = require("dotenv");
+const bodyParser = require("body-parser")
 
-dotenv.config()
 const server = express();
+dotenv.config();
+server.use(bodyParser())
 server.use(cookieParser())
 server.use(express.json())
 server.use("/login", loginRouter);
