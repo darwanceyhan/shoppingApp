@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Pool } from "pg";
-import { verifyToken } from './middlewares/auth.middleware';
+import { tokenHelper } from './middlewares/auth.middleware';
 const cookieParser = require("cookie-parser")
 const express = require("express")
 const loginRouter = require("./routers/login.router");
@@ -27,7 +27,7 @@ export const pool = new Pool({
     connectionTimeoutMillis: 5000, // Example: Set a higher timeout value (5 seconds)
 });
 
-server.get('/', verifyToken, (req: Request, res: Response, next: NextFunction) => {
+server.get('/', tokenHelper.verifyToken, (req: Request, res: Response, next: NextFunction) => {
     try {
         res.send('Hello World');
 

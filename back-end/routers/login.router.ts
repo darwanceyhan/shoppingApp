@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { Iuser } from '../interfaces/Iuser';
 import { Ierror } from '../interfaces/Ierror';
 import { pool } from '../index';
-import { generateToken } from '../middlewares/auth.middleware';
+import { tokenHelper } from '../middlewares/auth.middleware';
 import { HashGenerator } from '../utils/hashGenerator';
 
 const express = require("express");
@@ -29,7 +29,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
                         next(errObject);
                     } else {
-                        const token = generateToken(user);
+                        const token = tokenHelper.generateToken(user)
                         res.cookie('user', token, { maxAge: 90000, httpOnly: true });
                         res.status(200).json({ login: true });
                     }
