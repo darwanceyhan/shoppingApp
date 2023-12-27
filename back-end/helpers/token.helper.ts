@@ -14,7 +14,7 @@ export class TokenHelper {
 
         if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
             return next({
-                message: "Erişim engellendi. Geçerli bir token sağlanmadı.",
+                message: "Access denied. No valid token provided.",
                 statusCode: 401,
             });
         }
@@ -23,7 +23,7 @@ export class TokenHelper {
 
         if (!token) {
             return next({
-                message: "Geçersiz token formatı.",
+                message: "Invalid token format.",
                 statusCode: 401,
             });
         }
@@ -34,7 +34,7 @@ export class TokenHelper {
             next();
         } catch (error) {
             next({
-                message: "Geçersiz token.",
+                message: "Invalid token.",
                 statusCode: 401,
             });
         }
