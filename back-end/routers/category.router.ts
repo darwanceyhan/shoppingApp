@@ -3,11 +3,11 @@ import express from "express";
 import { pool } from "../index";
 import { Ierror } from "../interfaces/Ierror";
 import { IproductResponse } from "../interfaces/IproductResponse";
-
+import { tokenHelper } from "../middlewares/auth.middleware";
 const router = express.Router();
 
 router.get(
-    "/:categoryId",
+    "/:categoryId", tokenHelper.verifyToken,
     (req: Request, res: Response, next: NextFunction) => {
         pool.query(
             "select * from categories",
