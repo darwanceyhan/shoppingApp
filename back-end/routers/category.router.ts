@@ -5,11 +5,12 @@ import { Ierror } from "../interfaces/Ierror";
 import { IcategoryResponse } from "../interfaces/IcategoryResponse";
 import { IproductResponse } from "../interfaces/IproductResponse";
 import { tokenHelper } from "../middlewares/auth.middleware";
-import { isValidCategoryId } from "../helpers/validCategoryId.helper";
+import { isValidCategoryName } from "../helpers/validCategoryName.helper";
+import { productsQuery } from "../query/products.query";
 const router = express.Router();
 
-router.get("/", tokenHelper.verifyToken, (req: Request, res: Response, next: NextFunction) => {
-    pool.query(" SELECT productname, price, stockquantity, categoryname FROM products INNER JOIN categories ON products.categoryid = categories.categoryid",
+router.get("/", (req: Request, res: Response, next: NextFunction) => {
+    pool.query(productsQuery,
         (err: Error, result: { rows: IproductResponse }) => {
             if (err) {
                 const errObject: Ierror = {
@@ -25,8 +26,7 @@ router.get("/", tokenHelper.verifyToken, (req: Request, res: Response, next: Nex
 })
 
 router.get(
-    "/:categoryId",
-    tokenHelper.verifyToken,
+    "/:categoriesParam",
     (req: Request, res: Response, next: NextFunction) => {
         pool.query(
             "SELECT * FROM categories",
@@ -40,17 +40,16 @@ router.get(
                 }
 
                 const categories: IcategoryResponse[] = result.rows;
-                const categoryId = req.params.categoryId;
 
-                // Check category id to prevent SQL injection
-                if (isValidCategoryId(categoryId, categories)) {
-                    let query = `
-                        SELECT productname, price, stockquantity, categoryname
-                        FROM products
-                        INNER JOIN categories ON products.categoryid = categories.categoryid WHERE products.categoryid = $1
-                    `;
+                const splittedCategoryNames = req.params.categoriesParam.split("&")
+                console.log(splittedCategoryNames)
 
-                    pool.query(query, [categoryId], (err: Error, result: { rows: IproductResponse }) => {
+                if (isValidCategoryName(splittedCategoryNames, categories)) {
+
+                    const inQueryFilterNumbers = splittedCategoryNames.map((_, index) => `$${index + 1}`).join(", ");
+                    const modifiedQuery = productsQuery + ` WHERE categories.categoryname IN (${inQueryFilterNumbers})`;
+
+                    pool.query(modifiedQuery, splittedCategoryNames, (err: Error, result: { rows: IproductResponse }) => {
                         if (err) {
                             const errObject: Ierror = {
                                 message: "Internal Server Error",
@@ -58,12 +57,13 @@ router.get(
                             };
                             return next(errObject);
                         } else {
+                            console.table(result.rows)
                             res.json(result.rows);
                         }
                     });
                 } else {
                     const errObject: Ierror = {
-                        message: "Enter a valid categoryId",
+                        message: "Enter a valid categoryName",
                         statusCode: 400,
                     };
                     next(errObject);
