@@ -29,7 +29,7 @@ export class TokenHelper {
         }
 
         try {
-            const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+            const decoded = jwt.verify(req.cookies["user"], process.env.ACCESS_TOKEN_SECRET);
             console.log(decoded)
             next();
         } catch (error) {
