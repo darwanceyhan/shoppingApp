@@ -2,19 +2,35 @@ import { Request, Response, NextFunction } from "express";
 import express from "express";
 import { pool } from "../index";
 import { Ierror } from "../interfaces/Ierror";
+import { IcategoryResponse } from "../interfaces/IcategoryResponse";
 import { IproductResponse } from "../interfaces/IproductResponse";
 import { tokenHelper } from "../middlewares/auth.middleware";
+import { isValidCategoryId } from "../helpers/validCategoryId.helper";
 const router = express.Router();
 
+router.get("/", tokenHelper.verifyToken, (req: Request, res: Response, next: NextFunction) => {
+    pool.query(" SELECT productname, price, stockquantity, categoryname FROM products INNER JOIN categories ON products.categoryid = categories.categoryid",
+        (err: Error, result: { rows: IproductResponse }) => {
+            if (err) {
+                const errObject: Ierror = {
+                    message: "Internal Server Error",
+                    statusCode: 500,
+                };
+                return next(errObject);
+            }
+            else {
+                res.send(result.rows)
+            }
+        })
+})
+
 router.get(
-    "/:categoryId", tokenHelper.verifyToken,
+    "/:categoryId",
+    tokenHelper.verifyToken,
     (req: Request, res: Response, next: NextFunction) => {
         pool.query(
-            "select * from categories",
-            (
-                err: Error,
-                result: { rows: { categoryid: number; categoryname: string }[] }
-            ) => {
+            "SELECT * FROM categories",
+            (err: Error, result: { rows: IcategoryResponse[] }) => {
                 if (err) {
                     const errObject: Ierror = {
                         message: "Internal Server Error",
@@ -23,46 +39,32 @@ router.get(
                     return next(errObject);
                 }
 
-                const categoryIds = result.rows.map((e) => String(e.categoryid));
+                const categories: IcategoryResponse[] = result.rows;
+                const categoryId = req.params.categoryId;
 
-                if (req.params.categoryId == "all") {
-                    pool.query(
-                        "SELECT * FROM products",
-                        (
-                            err: Error,
-                            result: { rows: { categoryid: number; categoryname: string } }
-                        ) => {
-                            if (err) {
-                                const errObject: Ierror = {
-                                    message: "Internal Server Error",
-                                    statusCode: 500,
-                                };
-                                return next(errObject);
-                            } else {
-                                res.send(result.rows);
-                            }
+                // Check category id to prevent SQL injection
+                if (isValidCategoryId(categoryId, categories)) {
+                    let query = `
+                        SELECT productname, price, stockquantity, categoryname
+                        FROM products
+                        INNER JOIN categories ON products.categoryid = categories.categoryid WHERE products.categoryid = $1
+                    `;
+
+                    pool.query(query, [categoryId], (err: Error, result: { rows: IproductResponse }) => {
+                        if (err) {
+                            const errObject: Ierror = {
+                                message: "Internal Server Error",
+                                statusCode: 500,
+                            };
+                            return next(errObject);
+                        } else {
+                            res.json(result.rows);
                         }
-                    );
-                } else if (categoryIds.includes(req.params.categoryId)) {
-                    pool.query(
-                        "SELECT productname , price , stockquantity , categoryname FROM products INNER JOIN categories ON products.categoryid = categories.categoryid WHERE products.categoryid = $1",
-                        [req.params.categoryId],
-                        (err: Error, result: { rows: IproductResponse }) => {
-                            if (err) {
-                                const errObject: Ierror = {
-                                    message: "Internal Server Error",
-                                    statusCode: 500,
-                                };
-                                return next(errObject);
-                            } else {
-                                res.send(result.rows);
-                            }
-                        }
-                    );
+                    });
                 } else {
                     const errObject: Ierror = {
-                        message: "Enter correctly categoryId",
-                        statusCode: 500,
+                        message: "Enter a valid categoryId",
+                        statusCode: 400,
                     };
                     next(errObject);
                 }
