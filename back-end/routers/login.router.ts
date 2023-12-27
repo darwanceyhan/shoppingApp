@@ -10,7 +10,6 @@ const router = express.Router();
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-
         const user: Iuser = req.body;
         const hashGenerator = new HashGenerator(user.password);
 
@@ -18,18 +17,22 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
             pool.query(
                 'SELECT password FROM customers WHERE email=$1',
                 [user.email],
-                async (err, result): Promise<void> => {
-                    const compared = hashGenerator.comparePassword(result.rows[0])
-                    if (!compared) {
+                async (err: Error, result: { rows: { password: string }[] }): Promise<void> => {
+                    if (err) {
+                        next(err);
+                        return;
+                    }
 
-                        const errObject = {
+                    const compared = hashGenerator.comparePassword(result.rows[0]?.password);
+
+                    if (!compared) {
+                        const errObject: Ierror = {
                             statusCode: 401,
                             message: 'Email or password unauthorized',
                         };
-
                         next(errObject);
                     } else {
-                        const token = tokenHelper.generateToken(user)
+                        const token = tokenHelper.generateToken(user);
                         res.cookie('user', token, { maxAge: 90000, httpOnly: true });
                         res.status(200).json({ login: true });
                     }
